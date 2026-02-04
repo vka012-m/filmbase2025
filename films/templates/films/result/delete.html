@@ -1,0 +1,14 @@
+{% extends 'films/base.html' %}
+
+{% block title %}Удалить результат "{{ result }}"?{% endblock %}
+
+{% block content %}
+<h1>Удалить результат "{{ result }}"?</h1>
+<p>Вы уверены, что хотите удалить этот результат? Это действие нельзя отменить.</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Да, удалить</button>
+    <a href="{% url 'films:result_detail' result.id %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

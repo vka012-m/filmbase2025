@@ -1,0 +1,50 @@
+{% extends 'films/base.html' %}
+
+{% block title %}Результаты наград{% endblock %}
+
+{% block content %}
+<h1>Список результатов наград</h1>
+{% if user.is_superuser %}
+    <a href="{% url 'films:result_create' %}" class="btn btn-primary mb-3">Добавить результат</a>
+{% endif %}
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Номинация</th>
+                <th>Получатель</th>
+                <th>Победитель?</th>
+                {% if user.is_superuser %}<th>Действия</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+                <tr>
+                    <td><a href="{% url 'films:nomination_detail' result.nomination.id %}">{{ result.nomination.name }}</a> (<a href="{% url 'films:award_detail' result.nomination.award.id %}">{{ result.nomination.award.name }}</a>)</td>
+                    <td>
+                        {% if result.person %}
+                            <a href="{% url 'films:person_detail' result.person.id %}">{{ result.person.name }}</a>
+                        {% elif result.film %}
+                            <a href="{% url 'films:film_detail' result.film.id %}">{{ result.film.name }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{% if result.is_won %}Да{% else %}Нет{% endif %}</td>
+                    {% if user.is_superuser %}
+                        <td>
+                            <a href="{% url 'films:result_update' result.id %}" class="btn btn-sm btn-outline-secondary me-1">Изменить</a>
+                            <a href="{% url 'films:result_delete' result.id %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="{% if user.is_superuser %}4{% else %}3{% endif %}" class="text-muted">Нет результатов.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

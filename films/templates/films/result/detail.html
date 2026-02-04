@@ -1,0 +1,30 @@
+{% extends 'films/base.html' %}
+
+{% block title %}Результат: {{ result }}{% endblock %}
+
+{% block content %}
+    <h1>Детали результата</h1>
+
+    <ul class="list-unstyled">
+        <li><strong>Номинация:</strong> <a href="{% url 'films:nomination_detail' result.nomination.id %}">{{ result.nomination.name }}</a> (<a href="{% url 'films:award_detail' result.nomination.award.id %}">{{ result.nomination.award.name }} {{ result.nomination.award.year }})</a></li>
+        <li><strong>Получатель:</strong>
+            {% if result.person %}
+                <a href="{% url 'films:person_detail' result.person.id %}">{{ result.person.name }}</a>
+            {% elif result.film %}
+                <a href="{% url 'films:film_detail' result.film.id %}">{{ result.film.name }}</a>
+            {% else %}
+                Не указан
+            {% endif %}
+        </li>
+        <li><strong>Победитель:</strong> {% if result.is_won %}Да{% else %}Нет{% endif %}</li>
+    </ul>
+
+    <div class="mt-3">
+        {% if user.is_superuser %}
+            <a href="{% url 'films:result_update' result.id %}" class="btn btn-outline-secondary me-1">Изменить</a>
+            <a href="{% url 'films:result_delete' result.id %}" class="btn btn-outline-danger">Удалить</a>
+        {% endif %}
+        <a href="{% url 'films:result_list' %}" class="btn btn-secondary">Назад к списку</a>
+    </div>
+
+{% endblock %}

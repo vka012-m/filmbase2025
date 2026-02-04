@@ -1,0 +1,43 @@
+{% extends 'films/base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<h1>Премии</h1>
+
+<form method="get">
+  <div class="input-group mb-3">
+    <input type="search" name="query" class="form-control" placeholder="Название премии" value="{{ query }}"/>
+    <input type="number" name="year" class="form-control" placeholder="Год" value="{{ year_query }}" min="1900" max="2026"/>
+    <button type="submit" class="btn btn-primary">
+        <i class="bi-search"></i>
+    </button>
+  </div>
+</form>
+
+{% if awards %}
+    <div class="row">
+        {% for award in awards %}
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a href="{% url 'films:award_detail' award.id %}">{{ award.name }}</a>
+                        </h5>
+                        <p class="card-text">Год: {{ award.year }}</p>
+                        {% if award.description %}
+                            <p class="card-text">{{ award.description|truncatewords:20 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>Премии не найдены.</p>
+{% endif %}
+
+{% if user.is_superuser %}
+    <a href="{% url 'films:award_create' %}" class="btn btn-primary mb-3">Добавить премию</a>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'films/base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Добавить премию{% endblock %}
+
+{% block content %}
+<h1>Добавить премию</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {% bootstrap_form form layout='floating' %}
+    {% bootstrap_button button_type="submit" content="Сохранить" %}
+    <a href="{% url 'films:award_list' %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

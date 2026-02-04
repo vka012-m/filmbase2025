@@ -1,0 +1,29 @@
+{% extends 'films/base.html' %}
+
+{% block title %}Номинации{% endblock %}
+
+{% block content %}
+<h1>Список номинаций</h1>
+{% if user.is_superuser %}
+    <a href="{% url 'films:nomination_create' %}" class="btn btn-primary mb-3">Добавить номинацию</a>
+{% endif %}
+
+<div class="row">
+    {% for nomination in nominations %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><a href="{% url 'films:nomination_detail' nomination.id %}">{{ nomination.name }}</a></h5>
+                    <p class="card-text">Премия: <a href="{% url 'films:award_detail' nomination.award.id %}">{{ nomination.award.name }} ({{ nomination.award.year }})</a></p>
+                    {% if user.is_superuser %}
+                        <a href="{% url 'films:nomination_update' nomination.id %}" class="btn btn-sm btn-outline-secondary me-1">Изменить</a>
+                        <a href="{% url 'films:nomination_delete' nomination.id %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p class="text-muted">Нет номинаций.</p>
+    {% endfor %}
+</div>
+{% endblock %}

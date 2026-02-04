@@ -1,0 +1,14 @@
+{% extends 'films/base.html' %}
+
+{% block title %}Удалить номинацию "{{ nomination.name }}"{% endblock %}
+
+{% block content %}
+<h1>Удалить номинацию "{{ nomination.name }}"?</h1>
+<p>Вы уверены, что хотите удалить эту номинацию? Все связанные результаты также будут удалены. Это действие нельзя отменить.</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Да, удалить</button>
+    <a href="{% url 'films:nomination_detail' nomination.id %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

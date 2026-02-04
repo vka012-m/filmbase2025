@@ -1,0 +1,44 @@
+{% extends 'films/base.html' %}
+
+{% block title %}{{ nomination.name }} - {{ nomination.award.name }}{% endblock %}
+
+{% block content %}
+<h1>{{ nomination.name }}</h1>
+<h2>Премия: <a href="{% url 'films:award_detail' nomination.award.id %}">{{ nomination.award.name }} ({{ nomination.award.year }})</a></h2>
+
+<div class="mb-3">
+    {% if user.is_superuser %}
+        <a href="{% url 'films:nomination_update' nomination.id %}" class="btn btn-outline-secondary me-1">Изменить</a>
+        <a href="{% url 'films:nomination_delete' nomination.id %}" class="btn btn-outline-danger">Удалить</a>
+    {% endif %}
+</div>
+
+<h3>Результаты:</h3>
+{% if results %}
+    <ul class="list-group">
+        {% for result in results %}
+            <li class="list-group-item">
+                {% if result.is_won %}
+                    <strong>Победитель:</strong>
+                {% else %}
+                    Номинант:
+                {% endif %}
+                {% if result.person %}
+                    <a href="{% url 'films:person_detail' result.person.id %}">{{ result.person.name }}</a>
+                {% elif result.film %}
+                    <a href="{% url 'films:film_detail' result.film.id %}">{{ result.film.name }}</a>
+                {% else %}
+                    Неизвестный
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="text-muted">Нет результатов для этой номинации.</p>
+{% endif %}
+
+{% if user.is_superuser %}
+    <a href="{% url 'films:result_create' %}?nomination={{ nomination.id }}" class="btn btn-primary mt-2">Добавить результат</a>
+{% endif %}
+
+{% endblock %}
