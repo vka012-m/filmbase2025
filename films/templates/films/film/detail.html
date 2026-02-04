@@ -101,8 +101,29 @@
               <iframe src="{{ film.trailer_url }}" title="YouTube video" allowfullscreen></iframe>
             </div>
           {% endif %}
+          {% if awards_results %}
+            <h2>Награды и номинации</h2>
+            <ul class="list-group">
+              {% for result in awards_results %}
+                <li class="list-group-item" style="background-color: {% if result.is_won %}#fff3cd; border-color: #ffeaa7; color: #495057;{% else %}#e9ecef; border-color: #dee2e6; color: #495057;{% endif %}">
+                  {% if result.is_won %}
+                    <strong>Победитель:</strong>
+                  {% else %}
+                    Номинант:
+                  {% endif %}
+                  <a href="{% url 'films:award_detail' result.nomination.award.id %}">
+                    {{ result.nomination.award.name }} ({{ result.nomination.award.year }})
+                  </a> -
+                  <a href="{% url 'films:nomination_detail' result.nomination.id %}">
+                    {{ result.nomination.name }}
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
-  {% endblock %}
+
+{% endblock %}

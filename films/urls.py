@@ -39,4 +39,22 @@ urlpatterns = [
          views.person_delete, name='person_delete'),
     path('people/autocomplete/',
          views.PersonAutocomplete.as_view(), name='person_autocomplete'),
+
+    path('awards/', views.award_list, name='award_list'),
+    path('awards/<int:id>/', views.award_detail, name='award_detail'),
+    path('awards/create/', views.award_create, name='award_create'),
+    path('awards/<int:id>/update/', views.award_update, name='award_update'),
+    path('awards/<int:id>/delete/', views.award_delete, name='award_delete'),
+
+    path('nominations/', views.nomination_list, name='nomination_list'),
+    path('nominations/<int:id>/', views.nomination_detail, name='nomination_detail'),
+    path('nominations/create/', views.nomination_create, name='nomination_create'),
+    path('nominations/<int:id>/update/', views.nomination_update, name='nomination_update'),
+    path('nominations/<int:id>/delete/', views.nomination_delete, name='nomination_delete'),
+
+    path('results/', views.result_list, name='result_list'),
+    path('results/<int:id>/', views.result_detail, name='result_detail'),
+    path('results/create/', views.result_create, name='result_create'),
+    path('results/<int:id>/update/', views.result_update, name='result_update'),
+    path('results/<int:id>/delete/', views.result_delete, name='result_delete'),
 ]

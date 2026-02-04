@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 import datetime
+from django.core.exceptions import ValidationError
 
 
 class MyModel(models.Model):
@@ -97,3 +98,53 @@ class Film(MyModel):
 
     def __str__(self):
         return self.name
+
+class Award(models.Model):
+    name = models.CharField(max_length=255)
+    year = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Премия"
+        verbose_name_plural = "Премии"
+
+    def __str__(self):
+        return f"{self.name} ({self.year})"
+
+class Nomination(models.Model):
+    name = models.CharField(max_length=255)
+    award = models.ForeignKey(Award, on_delete=models.CASCADE, related_name='nominations')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Номинация"
+        verbose_name_plural = "Номинации"
+
+    def __str__(self):
+        return f"{self.name} - {self.award}"
+
+class Result(models.Model):
+    nomination = models.ForeignKey(Nomination, on_delete=models.CASCADE, related_name='results')
+    person = models.ForeignKey(Person, on_delete=models.SET_NULL, null=True, blank=True, related_name='results')
+    film = models.ForeignKey(Film, on_delete=models.SET_NULL, null=True, blank=True, related_name='results')
+    is_won = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('nomination', 'person', 'film')
+        verbose_name = "Результат"
+        verbose_name_plural = "Результаты"
+
+    def __str__(self):
+        winner = "Победитель" if self.is_won else "Номинант"
+        if self.person:
+            return f"{winner}: {self.person} - {self.nomination}"
+        elif self.film:
+            return f"{winner}: {self.film} - {self.nomination}"
+        else:
+            return f"{winner}: Неизвестный - {self.nomination}"

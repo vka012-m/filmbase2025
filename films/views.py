@@ -3,6 +3,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import user_passes_test
 from .models import Country, Film, Genre, Person
 from .forms import CountryForm, GenreForm, FilmForm, PersonForm
+from .models import Award, Nomination, Result
+from .forms import AwardForm, NominationForm, ResultForm
 from .helpers import paginate
 from django.contrib import messages
 
@@ -128,11 +130,14 @@ def film_list(request):
 
 
 def film_detail(request, id):
-    queryset = Film.objects.prefetch_related("country", "genres", "director",
-                                             "people")
+    queryset = Film.objects.prefetch_related(
+        "country", "genres", "director", "people",
+        "results__nomination__award"
+    )
     film = get_object_or_404(queryset, id=id)
+    awards_results = film.results.all()
     return render(request, 'films/film/detail.html',
-                  {'film': film})
+                  {'film': film, 'awards_results': awards_results})
 
 
 @user_passes_test(check_admin)
@@ -185,10 +190,14 @@ def person_list(request):
 
 
 def person_detail(request, id):
-    queryset = Person.objects.prefetch_related("film_set", "directed_films")
+    queryset = Person.objects.prefetch_related(
+        "film_set", "directed_films",
+        "results__nomination__award"
+    )
     person = get_object_or_404(queryset, id=id)
+    awards_results = person.results.all()
     return render(request, 'films/person/detail.html',
-                  {'person': person})
+                  {'person': person, 'awards_results': awards_results})
 
 
 @user_passes_test(check_admin)
@@ -244,3 +253,146 @@ class CountryAutocomplete(autocomplete.Select2QuerySetView):
         if self.q:
             countries = countries.filter(name__istartswith=self.q)
         return countries
+
+def award_list(request):
+    query = request.GET.get('query', '').strip()
+    year_query = request.GET.get('year', '').strip()
+
+    awards = Award.objects.all().order_by('-year', 'name')
+
+    if query:
+        awards = awards.filter(name__icontains=query)
+
+    if year_query.isdigit():
+        awards = awards.filter(year=int(year_query))
+
+    context = {
+        'awards': awards,
+        'query': query,
+        'year_query': year_query,
+    }
+    return render(request, 'films/award_list.html', context)
+
+def award_detail(request, id):
+    award = get_object_or_404(Award, id=id)
+    nominations = Nomination.objects.filter(award=award).prefetch_related('results') # Оптимизация запроса
+    return render(request, 'films/award/detail.html', {'award': award, 'nominations': nominations})
+
+@user_passes_test(check_admin)
+def award_create(request):
+    if request.method == 'POST':
+        form = AwardForm(request.POST)
+        if form.is_valid():
+            award = form.save()
+            messages.success(request, 'Премия добавлена')
+            return redirect('films:award_detail', id=award.id)
+    else:
+        form = AwardForm()
+    return render(request, 'films/award/create.html', {'form': form})
+
+@user_passes_test(check_admin)
+def award_update(request, id):
+    award = get_object_or_404(Award, id=id)
+    if request.method == 'POST':
+        form = AwardForm(request.POST, instance=award)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Премия изменена')
+            return redirect('films:award_detail', id=award.id)
+    else:
+        form = AwardForm(instance=award)
+    return render(request, 'films/award/update.html', {'form': form})
+
+@user_passes_test(check_admin)
+def award_delete(request, id):
+    award = get_object_or_404(Award, id=id)
+    if request.method == 'POST':
+        award.delete()
+        messages.success(request, 'Премия удалена')
+        return redirect('films:award_list')
+    return render(request, 'films/award/delete.html', {'award': award})
+
+def nomination_list(request):
+    nominations = Nomination.objects.select_related('award').all()
+    return render(request, 'films/nomination/list.html', {'nominations': nominations})
+
+def nomination_detail(request, id):
+    nomination = get_object_or_404(Nomination, id=id)
+    results = Result.objects.filter(nomination=nomination).select_related('person', 'film')
+    return render(request, 'films/nomination/detail.html', {'nomination': nomination, 'results': results})
+
+@user_passes_test(check_admin)
+def nomination_create(request):
+    if request.method == 'POST':
+        form = NominationForm(request.POST)
+        if form.is_valid():
+            nomination = form.save()
+            messages.success(request, 'Номинация добавлена')
+            return redirect('films:nomination_detail', id=nomination.id)
+    else:
+        form = NominationForm()
+    return render(request, 'films/nomination/create.html', {'form': form})
+
+@user_passes_test(check_admin)
+def nomination_update(request, id):
+    nomination = get_object_or_404(Nomination, id=id)
+    if request.method == 'POST':
+        form = NominationForm(request.POST, instance=nomination)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Номинация изменена')
+            return redirect('films:nomination_detail', id=nomination.id)
+    else:
+        form = NominationForm(instance=nomination)
+    return render(request, 'films/nomination/update.html', {'form': form})
+
+@user_passes_test(check_admin)
+def nomination_delete(request, id):
+    nomination = get_object_or_404(Nomination, id=id)
+    if request.method == 'POST':
+        nomination.delete()
+        messages.success(request, 'Номинация удалена')
+        return redirect('films:nomination_list')
+    return render(request, 'films/nomination/delete.html', {'nomination': nomination})
+
+def result_list(request):
+    results = Result.objects.select_related('nomination', 'person', 'film').all()
+    return render(request, 'films/result/list.html', {'results': results})
+
+def result_detail(request, id):
+    result = get_object_or_404(Result, id=id)
+    return render(request, 'films/result/detail.html', {'result': result})
+
+@user_passes_test(check_admin)
+def result_create(request):
+    if request.method == 'POST':
+        form = ResultForm(request.POST)
+        if form.is_valid():
+            result = form.save()
+            messages.success(request, 'Результат добавлен')
+            return redirect('films:result_detail', id=result.id)
+    else:
+        form = ResultForm()
+    return render(request, 'films/result/create.html', {'form': form})
+
+@user_passes_test(check_admin)
+def result_update(request, id):
+    result = get_object_or_404(Result, id=id)
+    if request.method == 'POST':
+        form = ResultForm(request.POST, instance=result)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Результат изменён')
+            return redirect('films:result_detail', id=result.id)
+    else:
+        form = ResultForm(instance=result)
+    return render(request, 'films/result/update.html', {'form': form})
+
+@user_passes_test(check_admin)
+def result_delete(request, id):
+    result = get_object_or_404(Result, id=id)
+    if request.method == 'POST':
+        result.delete()
+        messages.success(request, 'Результат удален')
+        return redirect('films:result_list')
+    return render(request, 'films/result/delete.html', {'result': result})
